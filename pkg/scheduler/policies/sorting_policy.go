@@ -30,12 +30,13 @@ type SortPolicy int
 const (
 	FifoSortPolicy             SortPolicy = iota // first in first out, submit time
 	FairSortPolicy                               // fair based on usage
+	FairWithAgingSortPolicy                      // fair with aging mechanism
 	deprecatedStateAwarePolicy                   // deprecated: now alias for FIFO
 	Undefined                                    // not initialised or parsing failed
 )
 
 func (s SortPolicy) String() string {
-	return [...]string{"fifo", "fair", "stateaware", "undefined"}[s]
+	return [...]string{"fifo", "fair", "fairwithaging", "stateaware", "undefined"}[s]
 }
 
 func SortPolicyFromString(str string) (SortPolicy, error) {
@@ -45,6 +46,8 @@ func SortPolicyFromString(str string) (SortPolicy, error) {
 		return FifoSortPolicy, nil
 	case FairSortPolicy.String():
 		return FairSortPolicy, nil
+	case FairWithAgingSortPolicy.String():
+		return FairWithAgingSortPolicy, nil
 	case deprecatedStateAwarePolicy.String():
 		log.Log(log.Deprecation).Warn("Sort policy 'stateaware' is deprecated; using 'fifo' instead")
 		return FifoSortPolicy, nil

@@ -188,7 +188,7 @@ func sortApplicationsByFairnessAndPriorityWithAging(sortedApps []*Application, g
 		r := sortedApps[j]
 		
 		// 計算公平性分數
-		fairnessScore := resources.CompUsageRatio(l.GetAllocatedResource(), r.GetAllocatedResource(), globalResource)
+		fairnessScore := float64(resources.CompUsageRatio(l.GetAllocatedResource(), r.GetAllocatedResource(), globalResource))
 		
 		// 計算老化分數 (等待時間越長分數越高)
 		lWaitingTime := l.GetMaxWaitingTime().Seconds()
@@ -222,7 +222,7 @@ func sortApplicationsByPriorityAndFairnessWithAging(sortedApps []*Application, g
 		}
 		
 		// 如果優先級相同，則考慮公平性和老化
-		fairnessScore := resources.CompUsageRatio(l.GetAllocatedResource(), r.GetAllocatedResource(), globalResource)
+		fairnessScore := float64(resources.CompUsageRatio(l.GetAllocatedResource(), r.GetAllocatedResource(), globalResource))
 		
 		// 計算老化分數
 		lWaitingTime := l.GetMaxWaitingTime().Seconds()
