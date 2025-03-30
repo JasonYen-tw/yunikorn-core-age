@@ -27,10 +27,11 @@ type SortingPolicy int
 const (
 	BinPackingPolicy SortingPolicy = iota
 	FairnessPolicy
+	FairWithAgingSortPolicy
 )
 
 func (nsp SortingPolicy) String() string {
-	return [...]string{"binpacking", "fair"}[nsp]
+	return [...]string{"binpacking", "fair", "fairwithaging"}[nsp]
 }
 
 func SortingPolicyFromString(str string) (SortingPolicy, error) {
@@ -40,6 +41,8 @@ func SortingPolicyFromString(str string) (SortingPolicy, error) {
 		return FairnessPolicy, nil
 	case BinPackingPolicy.String():
 		return BinPackingPolicy, nil
+	case FairWithAgingSortPolicy.String():
+		return FairWithAgingSortPolicy, nil
 	default:
 		return FairnessPolicy, fmt.Errorf("undefined policy: %s", str)
 	}

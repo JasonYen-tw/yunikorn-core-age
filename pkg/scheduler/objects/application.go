@@ -122,6 +122,9 @@ type Application struct {
 	sendStateChangeEvents bool // whether to send state-change events or not (simplifies testing)
 
 	locking.RWMutex
+
+	waitingTime    time.Duration
+	maxWaitingTime time.Duration
 }
 
 func NewApplication(siApp *si.AddApplicationRequest, ugi security.UserGroup, eventHandler handler.EventHandler, rmID string) *Application {
@@ -2261,4 +2264,28 @@ func (sa *Application) getResourceFromTags(tag string) *resources.Resource {
 	}
 
 	return resource
+}
+
+// UpdateWaitingTime 更新應用程式的等待時間
+func (sa *Application) UpdateWaitingTime() {
+	sa.Lock()
+	defer sa.Unlock()
+	sa.waitingTime = time.Since(sa.SubmissionTime)
+	if sa.waitingTime > sa.maxWaitingTime {
+		sa.maxWaitingTime = sa.waitingTime
+	}
+}
+
+// GetWaitingTime 獲取應用程式的等待時間
+func (sa *Application) GetWaitingTime() time.Duration {
+	sa.RLock()
+	defer sa.RUnlock()
+	return sa.waitingTime
+}
+
+// GetMaxWaitingTime 獲取應用程式的最大等待時間
+func (sa *Application) GetMaxWaitingTime() time.Duration {
+	sa.RLock()
+	defer sa.RUnlock()
+	return sa.maxWaitingTime
 }
