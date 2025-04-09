@@ -809,12 +809,9 @@ func (pc *PartitionContext) calculateOutstandingRequests() []*objects.Allocation
 // Lock free call this all locks are taken when needed in called functions
 func (pc *PartitionContext) tryAllocate() *objects.AllocationResult {
 	// 更新所有應用程式的等待時間
-	pc.applications.Range(func(key, value interface{}) bool {
-		if app, ok := value.(*objects.Application); ok {
-			app.UpdateWaitingTime()
-		}
-		return true
-	})
+	for _, app := range pc.applications {
+		app.UpdateWaitingTime()
+	}
 
 	if !resources.StrictlyGreaterThanZero(pc.root.GetPendingResource()) {
 		// nothing to do just return
