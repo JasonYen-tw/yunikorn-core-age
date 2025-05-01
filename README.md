@@ -59,3 +59,104 @@ Apache YuniKorn project has the following git repositories:
 
 The `yunikorn-core` is the brain of the scheduler, which makes placement decisions (allocate container X on node Y) according
 to the builtin rich scheduling policies. Scheduler core implementation is agnostic to the underneath resource manager system.
+
+# Yunikorn 節點排序策略實現
+
+## 概述
+
+本文檔描述了 Yunikorn 新增的 `FairWithAgingNodePolicy` 策略。
+
+## 主要更改文件
+
+pkg/scheduler/objects/node.go
+pkg/scheduler/objects/nodesorting.go
+pkg/scheduler/partition.go
+pkg/scheduler/policies/nodesorting_policy.go
+pkg/scheduler/policies/sorting_policy.go
+相關測試檔
+pkg/scheduler/objects/node_collection_test.go
+pkg/scheduler/objects/nodesorting_test.go
+pkg/scheduler/policies/nodesorting_policy_test.go
+
+## 排序策略類型
+
+目前支援三種節點排序策略：
+
+1. `BinPackingPolicy` - 資源打包策略
+2. `FairnessPolicy` - 公平性策略
+3. `FairWithAgingNodePolicy` - 帶老化機制的公平性策略
+
+## 算法虛擬碼
+
+### FairWithAgingNodePolicy 實現
+
+```go
+func (p fairWithAgingNodeSortingPolicy) ScoreNode(node *Node) float64 {
+    // 獲取節點等待時間
+    waitingTime := node.GetWaitingTime().Seconds()
+    
+    // 計算資源使用率
+    resourceUsage := absResourceUsage(node, &p.resourceWeights)
+    
+    // 計算最終分數
+    // 分數 = (1 - 資源使用率) + 0.3 * 等待時間
+    score := (1 - resourceUsage) + 0.3 * waitingTime
+    
+    return score
+}
+```
+
+### 資源使用率計算
+
+```go
+func absResourceUsage(node *Node, weights *map[string]float64) float64 {
+    totalWeight := 0.0
+    usage := 0.0
+    
+    shares := node.GetResourceUsageShares()
+    for k, v := range shares {
+        weight := (*weights)[k]
+        if weight == 0 || math.IsNaN(v) {
+            continue
+        }
+        usage += v * weight
+        totalWeight += weight
+    }
+    
+    if totalWeight == 0 {
+        return 0
+    }
+    return usage / totalWeight
+}
+```
+
+## 修改過的函式說明
+
+### 1. Node 結構體新增函式
+
+```go
+// 獲取節點等待時間
+func (n *Node) GetWaitingTime() time.Duration {
+    n.RLock()
+    defer n.RUnlock()
+    return n.waitingTime
+}
+
+// 設置節點等待時間
+func (n *Node) SetWaitingTime(duration time.Duration) {
+    n.Lock()
+    defer n.Unlock()
+    n.waitingTime = duration
+}
+
+// 更新節點等待時間
+func (n *Node) UpdateWaitingTime() {
+    n.Lock()
+    defer n.Unlock()
+    if n.lastAllocationTime.IsZero() {
+        n.waitingTime = time.Since(n.createTime)
+    } else {
+        n.waitingTime = time.Since(n.lastAllocationTime)
+    }
+}
+```

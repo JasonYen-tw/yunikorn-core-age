@@ -80,6 +80,8 @@ func NewNode(proto *si.NodeInfo) *Node {
 		allocations:       make(map[string]*Allocation),
 		schedulable:       true,
 		listeners:         make([]NodeListener, 0),
+		waitingTime:       0,
+		lastAllocatedTime: time.Now(),
 	}
 	sn.nodeEvents = schedEvt.NewNodeEvents(events.GetEventSystem())
 	// initialise available resources

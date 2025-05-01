@@ -21,7 +21,6 @@ package objects
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"gotest.tools/v3/assert"
 
@@ -140,18 +139,17 @@ func TestSetNodeSortingPolicy(t *testing.T) {
 		nodeID         string
 		allocatedVcore int64
 		allocatedMem   int64
-		waitingTime    time.Duration
 	}{
-		{"node-04", 8, 10, 0},
-		{"node-02", 4, 10, 5 * time.Second},
-		{"node-01", 2, 10, 10 * time.Second},
-		{"node-03", 6, 10, 0},
+		{"node-04", 8, 10},
+		{"node-02", 4, 10},
+		{"node-01", 2, 10},
+		{"node-03", 6, 10},
 	}
 
 	order := make(map[string][]string, 3)
 	order[policies.FairnessPolicy.String()] = []string{nodesInfo[2].nodeID, nodesInfo[1].nodeID, nodesInfo[3].nodeID, nodesInfo[0].nodeID}
 	order[policies.BinPackingPolicy.String()] = []string{nodesInfo[0].nodeID, nodesInfo[3].nodeID, nodesInfo[1].nodeID, nodesInfo[2].nodeID}
-	order[policies.FairWithAgingNodePolicy.String()] = []string{nodesInfo[2].nodeID, nodesInfo[1].nodeID, nodesInfo[0].nodeID, nodesInfo[3].nodeID}
+	order[policies.FairWithAgingNodePolicy.String()] = []string{nodesInfo[2].nodeID, nodesInfo[1].nodeID, nodesInfo[3].nodeID, nodesInfo[0].nodeID}
 
 	var tests = []struct {
 		name       string
@@ -173,7 +171,6 @@ func TestSetNodeSortingPolicy(t *testing.T) {
 				res := resources.NewResourceFromMap(map[string]resources.Quantity{"vcore": resources.Quantity(nodesInfo[id].allocatedVcore), "memory": resources.Quantity(nodesInfo[id].allocatedMem)})
 				alloc := newAllocation(fmt.Sprintf("test-app-%d", id+1), fmt.Sprintf("test-%d", id+1), res)
 				assert.Assert(t, node.TryAddAllocation(alloc), "Allocation error happened on node")
-				node.SetWaitingTime(nodesInfo[id].waitingTime)
 				assert.NilError(t, nc.AddNode(node), "Adding node to collection failed")
 			}
 
