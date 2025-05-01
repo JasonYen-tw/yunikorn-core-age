@@ -209,33 +209,33 @@ func sortApplicationsByPriorityAndSubmissionTime(sortedApps []*Application) {
 // 	})
 // }
 
-func sortApplicationsByPriorityAndFairnessWithAging(sortedApps []*Application, globalResource *resources.Resource) {
-	sort.SliceStable(sortedApps, func(i, j int) bool {
-		l := sortedApps[i]
-		r := sortedApps[j]
+// func sortApplicationsByPriorityAndFairnessWithAging(sortedApps []*Application, globalResource *resources.Resource) {
+// 	sort.SliceStable(sortedApps, func(i, j int) bool {
+// 		l := sortedApps[i]
+// 		r := sortedApps[j]
 		
-		// 首先考慮優先級
-		lPriority := l.GetAskMaxPriority()
-		rPriority := r.GetAskMaxPriority()
-		if lPriority != rPriority {
-			return lPriority > rPriority
-		}
+// 		// 首先考慮優先級
+// 		lPriority := l.GetAskMaxPriority()
+// 		rPriority := r.GetAskMaxPriority()
+// 		if lPriority != rPriority {
+// 			return lPriority > rPriority
+// 		}
 		
-		// 如果優先級相同，則考慮公平性和老化
-		fairnessScore := float64(resources.CompUsageRatio(l.GetAllocatedResource(), r.GetAllocatedResource(), globalResource))
+// 		// 如果優先級相同，則考慮公平性和老化
+// 		fairnessScore := float64(resources.CompUsageRatio(l.GetAllocatedResource(), r.GetAllocatedResource(), globalResource))
 		
-		// 計算老化分數
-		lWaitingTime := l.GetMaxWaitingTime().Seconds()
-		rWaitingTime := r.GetMaxWaitingTime().Seconds()
-		agingScore := lWaitingTime - rWaitingTime
+// 		// 計算老化分數
+// 		lWaitingTime := l.GetMaxWaitingTime().Seconds()
+// 		rWaitingTime := r.GetMaxWaitingTime().Seconds()
+// 		agingScore := lWaitingTime - rWaitingTime
 		
-		// 綜合分數 = 公平性分數 + 老化分數
-		const agingWeight = 0.3
-		totalScore := fairnessScore + (agingScore * agingWeight)
+// 		// 綜合分數 = 公平性分數 + 老化分數
+// 		const agingWeight = 0.3
+// 		totalScore := fairnessScore + (agingScore * agingWeight)
 		
-		return totalScore < 0
-	})
-}
+// 		return totalScore < 0
+// 	})
+// }
 
 func filterOnPendingResources(apps map[string]*Application) []*Application {
 	filteredApps := make([]*Application, 0)
