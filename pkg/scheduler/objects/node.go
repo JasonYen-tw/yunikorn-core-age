@@ -134,6 +134,12 @@ func (n *Node) UpdateWaitingTime() {
 	}
 }
 
+// SetWaitingTime sets the waiting time for the node
+func (n *Node) SetWaitingTime(duration time.Duration) {
+	n.Lock()
+	defer n.Unlock()
+	n.waitingTime = duration
+}
 
 // Get an attribute by name. The most used attributes can be directly accessed via the
 // fields: HostName, RackName and Partition.
