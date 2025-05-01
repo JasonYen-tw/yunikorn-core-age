@@ -165,11 +165,11 @@ func NewNodeSortingPolicy(policyType string, resourceWeights map[string]float64)
 		sp = fairnessNodeSortingPolicy{
 			resourceWeights: weights,
 		}
-	}
 	case policies.FairWithAgingNodePolicy: 
 		sp = fairWithAgingNodeSortingPolicy{
 			resourceWeights: weights,
 		}
+	}
 
 	log.Log(log.SchedNode).Debug("new node sorting policy added",
 		zap.Stringer("type", pType), zap.Any("resourceWeights", weights))
