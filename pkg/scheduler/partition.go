@@ -812,9 +812,10 @@ func (pc *PartitionContext) tryAllocate() *objects.AllocationResult {
 	// for _, app := range pc.applications {
 	// 	app.UpdateWaitingTime()
 	// }
-	for _, node := range pc.nodes {
+	pc.GetNodeIterator().ForEachNode(func(node *objects.Node) bool {
 		node.UpdateWaitingTime()
-	}
+		return true
+	})
 
 	if !resources.StrictlyGreaterThanZero(pc.root.GetPendingResource()) {
 		// nothing to do just return
