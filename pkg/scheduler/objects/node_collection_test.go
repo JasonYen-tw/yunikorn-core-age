@@ -146,7 +146,7 @@ func TestSetNodeSortingPolicy(t *testing.T) {
 		{"node-03", 6, 10},
 	}
 
-	order := make(map[string][]string, 2)
+	order := make(map[string][]string, 3)
 	order[policies.FairnessPolicy.String()] = []string{nodesInfo[2].nodeID, nodesInfo[1].nodeID, nodesInfo[3].nodeID, nodesInfo[0].nodeID}
 	order[policies.BinPackingPolicy.String()] = []string{nodesInfo[0].nodeID, nodesInfo[3].nodeID, nodesInfo[1].nodeID, nodesInfo[2].nodeID}
 	order[policies.FairWithAgingNodePolicy.String()] = []string{nodesInfo[2].nodeID, nodesInfo[1].nodeID, nodesInfo[3].nodeID, nodesInfo[0].nodeID}
@@ -160,6 +160,7 @@ func TestSetNodeSortingPolicy(t *testing.T) {
 		{"Set default node sorting policy", "", order[policies.FairnessPolicy.String()]},
 		{"Set binpacking node sorting policy", policies.BinPackingPolicy.String(), order[policies.BinPackingPolicy.String()]},
 		{"Set fair node sorting policy", policies.FairnessPolicy.String(), order[policies.FairnessPolicy.String()]},
+		{"Set fair with aging node sorting policy", policies.FairWithAgingNodePolicy.String(), order[policies.FairWithAgingNodePolicy.String()]},
 	}
 
 	for _, tt := range tests {

@@ -20,6 +20,7 @@ package objects
 
 import (
 	"testing"
+	"time"
 
 	"gotest.tools/v3/assert"
 
@@ -37,6 +38,7 @@ func TestNewNodeSortingPolicy(t *testing.T) {
 		{"EmptyString", "", policies.FairnessPolicy},
 		{"FairString", "fair", policies.FairnessPolicy},
 		{"BinString", "binpacking", policies.BinPackingPolicy},
+		{"AgingString", "fairwithaging", policies.FairWithAgingNodePolicy},
 		{"UnknownString", "unknown", policies.FairnessPolicy},
 	}
 	for _, tt := range tests {
@@ -162,6 +164,10 @@ func TestSortPolicyWeighting(t *testing.T) {
 	if !ok {
 		t.Fatal("Didn't get binpacking policy")
 	}
+	aging, ok := NewNodeSortingPolicy("fairwithaging", weights).(fairWithAgingNodeSortingPolicy)
+	if !ok {
+		t.Fatal("Didn't get aging policy")
+	}
 
 	nc.SetNodeSortingPolicy(fair)
 	totalRes := resources.NewResourceFromMap(map[string]resources.Quantity{"vcore": 2000, "memory": 16000})
@@ -193,11 +199,25 @@ func TestSortPolicyWeighting(t *testing.T) {
 	// node1 w/ binpacking: same but 1 - fair => 0.65
 	assert.Equal(t, 0.65, bin.ScoreNode(node1), "Wrong binpacking score for node1")
 
+	// node1 w/ aging: (1 - resourceUsage) + 0.3*waitingTime
+	// waitingTime is 0 initially
+	assert.Equal(t, 0.65, aging.ScoreNode(node1), "Wrong aging score for node1")
+
 	// node2 w/ fair: 75% vcore, 25% memory => ((.75 * 4) + (.25 * 1)) / 5 = 0.65
 	assert.Equal(t, 0.65, fair.ScoreNode(node2), "Wrong fair score for node2")
 
 	// node2 w/ binpacking: same but 1 - fair = 0.35
 	assert.Equal(t, 0.35, bin.ScoreNode(node2), "Wrong binpacking score for node2")
+
+	// node2 w/ aging: (1 - resourceUsage) + 0.3*waitingTime
+	// waitingTime is 0 initially
+	assert.Equal(t, 0.35, aging.ScoreNode(node2), "Wrong aging score for node2")
+
+	// Test aging effect
+	// Simulate waiting time for node1
+	node1.SetWaitingTime(10 * time.Second)
+	// node1 w/ aging: (1 - 0.35) + 0.3*10 = 0.65 + 3 = 3.65
+	assert.Equal(t, 3.65, aging.ScoreNode(node1), "Wrong aging score for node1 with waiting time")
 
 	// node1 should be first as it is the least-loaded
 	nodes := make([]*Node, 0)
@@ -223,6 +243,20 @@ func TestSortPolicyWeighting(t *testing.T) {
 	assert.Equal(t, 2, len(nodes), "node length != 2")
 	assert.Equal(t, node2.NodeID, nodes[0].NodeID, "wrong initial node (binpacking)")
 	assert.Equal(t, node1.NodeID, nodes[1].NodeID, "wrong second node (binpacking)")
+
+	// switch to aging
+	nc.SetNodeSortingPolicy(aging)
+
+	// node1 should be first as it has higher waiting time
+	nodes = make([]*Node, 0)
+	nc.GetNodeIterator().ForEachNode(func(node *Node) bool {
+		nodes = append(nodes, node)
+		return true
+	})
+
+	assert.Equal(t, 2, len(nodes), "node length != 2")
+	assert.Equal(t, node1.NodeID, nodes[0].NodeID, "wrong initial node (aging)")
+	assert.Equal(t, node2.NodeID, nodes[1].NodeID, "wrong second node (aging)")
 }
 
 func TestSortPolicy(t *testing.T) {
