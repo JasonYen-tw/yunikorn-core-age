@@ -149,6 +149,8 @@ func TestSetNodeSortingPolicy(t *testing.T) {
 	order := make(map[string][]string, 2)
 	order[policies.FairnessPolicy.String()] = []string{nodesInfo[2].nodeID, nodesInfo[1].nodeID, nodesInfo[3].nodeID, nodesInfo[0].nodeID}
 	order[policies.BinPackingPolicy.String()] = []string{nodesInfo[0].nodeID, nodesInfo[3].nodeID, nodesInfo[1].nodeID, nodesInfo[2].nodeID}
+	order[policies.FairWithAgingNodePolicy.String()] = []string{nodesInfo[2].nodeID, nodesInfo[1].nodeID, nodesInfo[3].nodeID, nodesInfo[0].nodeID}
+
 	var tests = []struct {
 		name       string
 		input      string

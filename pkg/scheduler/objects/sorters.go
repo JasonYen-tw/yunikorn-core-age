@@ -114,12 +114,12 @@ func sortApplications(apps map[string]*Application, sortType policies.SortPolicy
 		} else {
 			sortApplicationsBySubmissionTimeAndPriority(sortedApps)
 		}
-	case policies.FairWithAgingSortPolicy:
-		if considerPriority {
-			sortApplicationsByPriorityAndFairnessWithAging(sortedApps, globalResource)
-		} else {
-			sortApplicationsByFairnessAndPriorityWithAging(sortedApps, globalResource)
-		}
+	// case policies.FairWithAgingSortPolicy:
+	// 	if considerPriority {
+	// 		sortApplicationsByPriorityAndFairnessWithAging(sortedApps, globalResource)
+	// 	} else {
+	// 		sortApplicationsByFairnessAndPriorityWithAging(sortedApps, globalResource)
+	// 	}
 	}
 	metrics.GetSchedulerMetrics().ObserveAppSortingLatency(sortingStart)
 	return sortedApps
@@ -182,32 +182,32 @@ func sortApplicationsByPriorityAndSubmissionTime(sortedApps []*Application) {
 	})
 }
 
-func sortApplicationsByFairnessAndPriorityWithAging(sortedApps []*Application, globalResource *resources.Resource) {
-	sort.SliceStable(sortedApps, func(i, j int) bool {
-		l := sortedApps[i]
-		r := sortedApps[j]
+// func sortApplicationsByFairnessAndPriorityWithAging(sortedApps []*Application, globalResource *resources.Resource) {
+// 	sort.SliceStable(sortedApps, func(i, j int) bool {
+// 		l := sortedApps[i]
+// 		r := sortedApps[j]
 		
-		// 計算公平性分數
-		fairnessScore := float64(resources.CompUsageRatio(l.GetAllocatedResource(), r.GetAllocatedResource(), globalResource))
+// 		// 計算公平性分數
+// 		fairnessScore := float64(resources.CompUsageRatio(l.GetAllocatedResource(), r.GetAllocatedResource(), globalResource))
 		
-		// 計算老化分數 (等待時間越長分數越高)
-		lWaitingTime := l.GetMaxWaitingTime().Seconds()
-		rWaitingTime := r.GetMaxWaitingTime().Seconds()
-		agingScore := lWaitingTime - rWaitingTime
+// 		// 計算老化分數 (等待時間越長分數越高)
+// 		lWaitingTime := l.GetMaxWaitingTime().Seconds()
+// 		rWaitingTime := r.GetMaxWaitingTime().Seconds()
+// 		agingScore := lWaitingTime - rWaitingTime
 		
-		// 綜合分數 = 公平性分數 + 老化分數
-		// 權重可以根據需求調整
-		const agingWeight = 0.3
-		totalScore := fairnessScore + (agingScore * agingWeight)
+// 		// 綜合分數 = 公平性分數 + 老化分數
+// 		// 權重可以根據需求調整
+// 		const agingWeight = 0.3
+// 		totalScore := fairnessScore + (agingScore * agingWeight)
 		
-		if totalScore != 0 {
-			return totalScore < 0
-		}
+// 		if totalScore != 0 {
+// 			return totalScore < 0
+// 		}
 		
-		// 如果分數相同，則考慮優先級
-		return l.GetAskMaxPriority() > r.GetAskMaxPriority()
-	})
-}
+// 		// 如果分數相同，則考慮優先級
+// 		return l.GetAskMaxPriority() > r.GetAskMaxPriority()
+// 	})
+// }
 
 func sortApplicationsByPriorityAndFairnessWithAging(sortedApps []*Application, globalResource *resources.Resource) {
 	sort.SliceStable(sortedApps, func(i, j int) bool {

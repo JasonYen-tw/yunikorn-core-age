@@ -41,12 +41,21 @@ type fairnessNodeSortingPolicy struct {
 	resourceWeights map[string]float64
 }
 
+type fairWithAgingNodeSortingPolicy struct {
+	resourceWeights map[string]float64
+}
+
 func (binPackingNodeSortingPolicy) PolicyType() policies.SortingPolicy {
 	return policies.BinPackingPolicy
 }
 
 func (fairnessNodeSortingPolicy) PolicyType() policies.SortingPolicy {
 	return policies.FairnessPolicy
+}
+
+
+func (p fairWithAgingNodeSortingPolicy) PolicyType() policies.SortingPolicy {
+	return policies.FairWithAgingNodePolicy
 }
 
 func absResourceUsage(node *Node, weights *map[string]float64) float64 {
@@ -86,6 +95,26 @@ func (p fairnessNodeSortingPolicy) ScoreNode(node *Node) float64 {
 	return absResourceUsage(node, &p.resourceWeights)
 }
 
+func (p fairWithAgingNodeSortingPolicy) ScoreNode(node *Node) float64 {
+	// 這裡你可以根據實作在 Node 的欄位決定 aging 行為
+	// 你需要先在 Node 結構加欄位：WaitingTime time.Duration
+	waitingTime := node.GetWaitingTime().Seconds()
+
+	resourceUsage := absResourceUsage(node, &p.resourceWeights)
+
+	// 越少使用（資源佔用低）+ 越久沒用 → 分數高
+	score := (1 - resourceUsage) + 0.3*waitingTime
+
+	log.Log(log.SchedNode).Debug("fairWithAgingNode score",
+		zap.String("node", node.NodeID),
+		zap.Float64("resourceUsage", resourceUsage),
+		zap.Float64("waitingTime", waitingTime),
+		zap.Float64("score", score),
+	)
+
+	return score
+}
+
 func cloneWeights(source map[string]float64) map[string]float64 {
 	weights := make(map[string]float64, len(source))
 	for k, v := range source {
@@ -99,6 +128,11 @@ func (p binPackingNodeSortingPolicy) ResourceWeights() map[string]float64 {
 }
 
 func (p fairnessNodeSortingPolicy) ResourceWeights() map[string]float64 {
+	return cloneWeights(p.resourceWeights)
+}
+
+
+func (p fairWithAgingNodeSortingPolicy) ResourceWeights() map[string]float64 {
 	return cloneWeights(p.resourceWeights)
 }
 
@@ -132,6 +166,10 @@ func NewNodeSortingPolicy(policyType string, resourceWeights map[string]float64)
 			resourceWeights: weights,
 		}
 	}
+	case policies.FairWithAgingNodePolicy: 
+		sp = fairWithAgingNodeSortingPolicy{
+			resourceWeights: weights,
+		}
 
 	log.Log(log.SchedNode).Debug("new node sorting policy added",
 		zap.Stringer("type", pType), zap.Any("resourceWeights", weights))

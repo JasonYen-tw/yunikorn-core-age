@@ -59,6 +59,8 @@ type Node struct {
 	listeners    []NodeListener          // a list of node listeners
 	nodeEvents   *schedEvt.NodeEvents
 
+	waitingTime    time.Duration
+	lastAllocatedTime time.Time
 	locking.RWMutex
 }
 
@@ -114,6 +116,23 @@ func (sn *Node) initializeAttribute(newAttributes map[string]string) {
 	sn.Rackname = sn.attributes[siCommon.RackName]
 	sn.Partition = sn.attributes[siCommon.NodePartition]
 }
+
+func (n *Node) GetWaitingTime() time.Duration {
+	n.RLock()
+	defer n.RUnlock()
+	return n.waitingTime
+}
+
+func (n *Node) UpdateWaitingTime() {
+	n.Lock()
+	defer n.Unlock()
+	if !n.lastAllocatedTime.IsZero() {
+		n.waitingTime = time.Since(n.lastAllocatedTime)
+	} else {
+		n.waitingTime = 0
+	}
+}
+
 
 // Get an attribute by name. The most used attributes can be directly accessed via the
 // fields: HostName, RackName and Partition.
@@ -425,6 +444,8 @@ func (sn *Node) addAllocationInternal(alloc *Allocation, force bool) bool {
 		}
 		sn.availableResource.SubFrom(res)
 		sn.availableResource.Prune()
+		sn.lastAllocatedTime = time.Now()
+		
 		sn.nodeEvents.SendAllocationAddedEvent(sn.NodeID, alloc.allocationKey, res)
 		log.Log(log.SchedNode).Info("node allocation processed",
 			zap.String("appID", alloc.GetApplicationID()),
