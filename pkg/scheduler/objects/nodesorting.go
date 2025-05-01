@@ -53,7 +53,6 @@ func (fairnessNodeSortingPolicy) PolicyType() policies.SortingPolicy {
 	return policies.FairnessPolicy
 }
 
-
 func (p fairWithAgingNodeSortingPolicy) PolicyType() policies.SortingPolicy {
 	return policies.FairWithAgingNodePolicy
 }
@@ -96,9 +95,11 @@ func (p fairnessNodeSortingPolicy) ScoreNode(node *Node) float64 {
 }
 
 func (p fairWithAgingNodeSortingPolicy) ScoreNode(node *Node) float64 {
-	// 這裡你可以根據實作在 Node 的欄位決定 aging 行為
-	// 你需要先在 Node 結構加欄位：WaitingTime time.Duration
-	waitingTime := node.GetWaitingTime().Seconds()
+	// 獲取等待時間，如果為 nil 則使用 0
+	waitingTime := float64(0)
+	if node != nil {
+		waitingTime = node.GetWaitingTime().Seconds()
+	}
 
 	resourceUsage := absResourceUsage(node, &p.resourceWeights)
 
@@ -130,7 +131,6 @@ func (p binPackingNodeSortingPolicy) ResourceWeights() map[string]float64 {
 func (p fairnessNodeSortingPolicy) ResourceWeights() map[string]float64 {
 	return cloneWeights(p.resourceWeights)
 }
-
 
 func (p fairWithAgingNodeSortingPolicy) ResourceWeights() map[string]float64 {
 	return cloneWeights(p.resourceWeights)
@@ -165,7 +165,7 @@ func NewNodeSortingPolicy(policyType string, resourceWeights map[string]float64)
 		sp = fairnessNodeSortingPolicy{
 			resourceWeights: weights,
 		}
-	case policies.FairWithAgingNodePolicy: 
+	case policies.FairWithAgingNodePolicy:
 		sp = fairWithAgingNodeSortingPolicy{
 			resourceWeights: weights,
 		}

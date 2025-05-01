@@ -60,7 +60,7 @@ type Node struct {
 	listeners    []NodeListener          // a list of node listeners
 	nodeEvents   *schedEvt.NodeEvents
 
-	waitingTime    time.Duration
+	waitingTime       time.Duration
 	lastAllocatedTime time.Time
 	locking.RWMutex
 }
@@ -452,7 +452,7 @@ func (sn *Node) addAllocationInternal(alloc *Allocation, force bool) bool {
 		sn.availableResource.SubFrom(res)
 		sn.availableResource.Prune()
 		sn.lastAllocatedTime = time.Now()
-		
+
 		sn.nodeEvents.SendAllocationAddedEvent(sn.NodeID, alloc.allocationKey, res)
 		log.Log(log.SchedNode).Info("node allocation processed",
 			zap.String("appID", alloc.GetApplicationID()),
