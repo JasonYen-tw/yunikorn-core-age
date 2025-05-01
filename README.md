@@ -24,7 +24,6 @@
 2. `FairnessPolicy` - 公平性策略
 3. `FairWithAgingNodePolicy` - 帶老化機制的公平性策略
 
-## 算法虛擬碼
 
 ### FairWithAgingNodePolicy 實現
 
